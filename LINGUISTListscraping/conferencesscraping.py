@@ -15,45 +15,61 @@ import re #for regular expressions
     #skips mid-page date dividers
 
 #scraping a HTML file of the website page:
-with open('browse_current_conferences.html') as html_file:
-    soup = BeautifulSoup(html_file, features="lxml")
-    csv_file = open('conferences_scrape.csv', 'w')
-    csv_writer = csv.writer(csv_file)
-    csv_writer.writerow(['title', 'location','start_date','end_date','LINGUISTList_url'])
-    
-    listing = soup.find('table', {'cellspacing': "10", "width": "100%"}).find_all('tr', recursive=False)[4:] #first conference is at index 4, session post at index 10.
+source = requests.get('https://old.linguistlist.org/callconf/browse-current.cfm?type=Conf').text
+soup = BeautifulSoup(source, 'lxml')
 
-    listing = [item for item in listing if not (item.find('td', {'align':'left', 'valign':'top'}))] #removes tabbed session postings + browse-by-date line on top of page
-    listing = [item for item in listing if not (item.find('span', class_='important'))] #removes call for papers and date dividers
-    listing = [item for item in listing if not ('Session' in item.find('td').text)] #removes sessions that are only labeled as sessions in parentheses.
+csv_file = open('conferences_scrape.csv', 'w')
+csv_writer = csv.writer(csv_file)
+csv_writer.writerow(['title', 'location','start_date','end_date','LINGUISTList_url'])
 
-    for posting in listing[0:]: #test with a few conferences (no session posts)
-        # print(posting)
+listing = soup.find('table', {'cellspacing': "10", "width": "100%"}).find_all('tr', recursive=False)[4:] #first conference is at index 4, session post at index 10.
 
-        #title
-        title = posting.find('a').text[0:-1] #[0:-1] removes the \n at the end
+listing = [item for item in listing if not (item.find('td', {'align':'left', 'valign':'top'}))] #removes tabbed session postings + browse-by-date line on top of page
+listing = [item for item in listing if not (item.find('span', class_='important'))] #removes call for papers and date dividers
+listing = [item for item in listing if not ('Session' in item.find('td').text)] #removes sessions that are only labeled as sessions in parentheses.
 
-        #location, start_date, end_date
-        try:
-            title_location_and_dates_text = posting.find('td').text 
-                #e.g. 11th Conference of the International Gender and Language Association (IGALA11)&nbsp;[London (Online)] [22-Jun-2021 - 24-Jun-2021]
-            location = re.findall('\[[^\]]*\]', title_location_and_dates_text)[0][1:-1]
-            dates = re.findall('\[[^\]]*\]', title_location_and_dates_text)[1][1:-1] #[1:-1] removes the brackets      
-            start_date = dates[0:11]
-            end_date = dates[14:len(dates)]
-        except Exception as e:
-            location = None;
-            start_date = None;
-            end_date = None;
+for posting in listing[0]: #test with a few conferences (no session posts)
+    print(posting)
+    # print(posting.find('a'))
+    # print(posting.find('a').text[0:-1])
+    #title
+    # title = posting.find('a').text[0:-1] #[0:-1] removes the \n at the end
+    # print(title)
 
-        #linguistlist_url
-        conference_id = posting.find('a')['href'][-6:]
-        linguistlist_url = f'https://old.linguistlist.org/callconf/browse-conf-action.cfm?ConfID={conference_id}'
+    #location, start_date, end_date
+    try:
+        title_location_and_dates_text = posting.find('td').text 
+            #e.g. 11th Conference of the International Gender and Language Association (IGALA11)&nbsp;[London (Online)] [22-Jun-2021 - 24-Jun-2021]
+        location = re.findall('\[[^\]]*\]', title_location_and_dates_text)[0][1:-1]
+        dates = re.findall('\[[^\]]*\]', title_location_and_dates_text)[1][1:-1] #[1:-1] removes the brackets      
+        start_date = dates[0:11]
+        end_date = dates[14:len(dates)]
+    except Exception as e:
+        location = None;
+        start_date = None;
+        end_date = None;
 
-        #write row with the conference's details
-        csv_writer.writerow([title, location, start_date, end_date, linguistlist_url])
+    #linguistlist_url
+    #435056
+    conference_id = posting.find('a')['href'][-6:]
+    linguistlist_url = f'https://old.linguistlist.org/callconf/browse-conf-action.cfm?ConfID={conference_id}'
 
-csv_file.close()
+    #get info from the conference's specific LINGUISTList webpage
+    conf_specific_source = requests.get(linguistlist_url).text
+    conf_specific_soup = BeautifulSoup(conf_specific_source, 'lxml')
+    conf_details = conf_specific_soup.find('div', class_='col-sm-8 text-left')
+    # print(conf_details.prettify())
+    # print(conf_details.prettify())
+
+    # in conf specific page, the written stuff is inside:
+        # <div class="col-sm-8 text-left">
+
+    print()
+
+    #write row with the conference's details
+    # csv_writer.writerow([title, location, start_date, end_date, linguistlist_url])
+
+#-----------------------
 
 #scraping from the website page:
     # source = requests.get('https://old.linguistlist.org/callconf/browse-current.cfm?type=Conf').text
