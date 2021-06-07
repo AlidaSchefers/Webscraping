@@ -3,38 +3,36 @@ import requests
 import csv
 import re #for regular expressions
 
-#this program currently scrapes from the HTML file of LINGUISTList's "browse current conferences" page.
+#This program currently scrapes LINGUISTList's "browse current conferences" webpage and the pages of individual conferences.
 
 #this program writes a csv that...
-    #contains each conference's title, location, dates, and LINGUISTList url
-    #does not contain each conference's Linguistic Field(s), Subject Language(s), and website
+    #contains each conference's title, website url, location, start date, end date, Linguistic Field(s), Subject Language(s), and LINGUISTList url
 #this version currently skips:
     #posts that are tabbed and labeled as "session"
     #posts that are labeled as "session" in the conference title parentheses.
     #calls for papers
-    #skips mid-page date dividers
+    #mid-page date dividers
 
-#scraping a HTML file of the website page:
+#scraping from the website page:
 source = requests.get('https://old.linguistlist.org/callconf/browse-current.cfm?type=Conf').text
 soup = BeautifulSoup(source, 'lxml')
 
+#create a csv file
 csv_file = open('conferences_scrape.csv', 'w')
 csv_writer = csv.writer(csv_file)
-csv_writer.writerow(['title', 'location','start_date','end_date','LINGUISTList_url'])
 
-listing = soup.find('table', {'cellspacing': "10", "width": "100%"}).find_all('tr', recursive=False)[4:] #first conference is at index 4, session post at index 10.
+#write the top header in the csv file
+csv_writer.writerow(['title', 'website_url', 'location','start_date','end_date','linguistic_field(s)','subject_language(s)','LINGUISTList_url'])
 
+#reducing the scraping code from the whole page to just the conferences listing
+listing = soup.find('table', {'cellspacing': "10", "width": "100%"}).find_all('tr', recursive=False)[4:] #first conference is at index 4
 listing = [item for item in listing if not (item.find('td', {'align':'left', 'valign':'top'}))] #removes tabbed session postings + browse-by-date line on top of page
 listing = [item for item in listing if not (item.find('span', class_='important'))] #removes call for papers and date dividers
 listing = [item for item in listing if not ('Session' in item.find('td').text)] #removes sessions that are only labeled as sessions in parentheses.
 
-for posting in listing[0]: #test with a few conferences (no session posts)
-    print(posting)
-    # print(posting.find('a'))
-    # print(posting.find('a').text[0:-1])
+for posting in listing: #currently scraping 11 conference postings
     #title
-    # title = posting.find('a').text[0:-1] #[0:-1] removes the \n at the end
-    # print(title)
+    title = posting.find('a').text[0:-1].replace('\n', ' ') #[0:-1] removes the \n at the end, and the replace('\n', ' ') makes the title and its shortened name in () stay on the same line
 
     #location, start_date, end_date
     try:
@@ -48,9 +46,8 @@ for posting in listing[0]: #test with a few conferences (no session posts)
         location = None;
         start_date = None;
         end_date = None;
-
+    
     #linguistlist_url
-    #435056
     conference_id = posting.find('a')['href'][-6:]
     linguistlist_url = f'https://old.linguistlist.org/callconf/browse-conf-action.cfm?ConfID={conference_id}'
 
@@ -58,22 +55,34 @@ for posting in listing[0]: #test with a few conferences (no session posts)
     conf_specific_source = requests.get(linguistlist_url).text
     conf_specific_soup = BeautifulSoup(conf_specific_source, 'lxml')
     conf_details = conf_specific_soup.find('div', class_='col-sm-8 text-left')
-    # print(conf_details.prettify())
-    # print(conf_details.prettify())
 
-    # in conf specific page, the written stuff is inside:
-        # <div class="col-sm-8 text-left">
+    #conf_website_url
+    try:
+        posting_str_ver = str(conf_details)
+        if(len(re.findall('Web Site: <a href="([^"]*)"',posting_str_ver)) != 0):
+            conf_website_url = re.findall('Web Site: <a href="([^"]*)"',posting_str_ver)[0]
+        else:
+            conf_website_url = re.findall('Meeting URL: <a href="([^"]*)"',posting_str_ver)[0]
+    except Exception as e:
+        conf_website_url = None
 
-    print()
+    #ling_fields
+    try:
+        ling_fields = re.findall('Linguistic Field\(s\): (.*?)<br',posting_str_ver)[0]
+    except Exception as e:
+        ling_fields = None
+    
+    #subject_langs
+    try:
+        subject_langs = re.findall('Subject Language\(s\): (.*?)<br',posting_str_ver)[0]
+        #the conference at index 11 has subject languages.
+    except Exception as e:
+        subject_langs = None
 
-    #write row with the conference's details
-    # csv_writer.writerow([title, location, start_date, end_date, linguistlist_url])
+    # print("Title: "+title+".\n\t"+"URL: "+str(conf_website_url)+"\n\tLing fields: "+str(ling_fields)+"\n\tSubject langs: "+str(subject_langs))
 
-#-----------------------
-
-#scraping from the website page:
-    # source = requests.get('https://old.linguistlist.org/callconf/browse-current.cfm?type=Conf').text
-    # soup = BeautifulSoup(source, 'lxml')
+    #write a row with the conference's details
+    csv_writer.writerow([title, conf_website_url, location, start_date, end_date, ling_fields, subject_langs, linguistlist_url])
 
 # Initial notes -------------------------------
     #Things to skip:
