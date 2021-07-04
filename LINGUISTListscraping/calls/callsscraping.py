@@ -1,0 +1,1 @@
+# scrapes current Call for Papers postings on LINGUISTList
