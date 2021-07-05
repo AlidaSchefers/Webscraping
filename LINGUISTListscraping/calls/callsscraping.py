@@ -27,7 +27,7 @@ listing = [item for item in listing if not (item.find('td', {'align':'left', 'va
 listing = [item for item in listing if not (item.find('span', class_='important'))] #removes call for papers and date dividers
 listing = [item for item in listing if not ('Session' in item.find('td').text)] #removes sessions that are only labeled as sessions in parentheses.
 
-for posting in listing[0:5]:
+for posting in listing:
     #title
     title = posting.find('a').text[0:-1].replace('\n', ' ') #[0:-1] removes the \n at the end, and the replace('\n', ' ') makes the title and its shortened name in () stay on the same line
 
