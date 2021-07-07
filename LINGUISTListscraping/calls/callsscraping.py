@@ -67,7 +67,7 @@ for posting in listing:
 
     #call_deadline
     try:
-        call_deadline = re.findall('Call Deadline: (.*?)<br',posting_str_ver)[0][:-1]
+        call_deadline = re.findall('Call Deadline: (.*?) <br',posting_str_ver)[0]
     except Exception as e:
         call_deadline = None
 
@@ -76,7 +76,7 @@ for posting in listing:
         ling_fields = re.findall('Linguistic Field\(s\): (.*?)<br',posting_str_ver)[0]
     except Exception as e:
         ling_fields = None
-    
+
     #subject_langs
     try:
         subject_langs = re.findall('Subject Language\(s\): (.*?)<br',posting_str_ver)[0]
