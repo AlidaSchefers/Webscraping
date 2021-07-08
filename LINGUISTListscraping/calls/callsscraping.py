@@ -21,7 +21,7 @@ csv_writer = csv.writer(csv_file)
 #write the top header in the csv file
 csv_writer.writerow(['title', 'website_url', 'call_deadline', 'location', 'is_online_or_hybrid','start_date','end_date','linguistic_field(s)','subject_language(s)','LINGUISTList_url'])
 
-#reducing the scraping code from the whole page to just the conferences listing
+#reducing the scraping code from the whole page to just the calls listing
 listing = soup.find('table', {'cellspacing': "10", "width": "100%"}).find_all('tr', recursive=False)[4:] #first conference is at index 4
 listing = [item for item in listing if not (item.find('td', {'align':'left', 'valign':'top'}))] #removes tabbed session postings + browse-by-date line on top of page
 listing = [item for item in listing if not (item.find('span', class_='important'))] #removes call for papers and date dividers
@@ -34,12 +34,11 @@ for posting in listing:
     #location, start_date, end_date, is_online_or_hybrid
     try:
         title_location_and_dates_text = posting.find('td').text 
-            #e.g. 11th Conference of the International Gender and Language Association (IGALA11)&nbsp;[London (Online)] [22-Jun-2021 - 24-Jun-2021]
         location = re.findall('\[([^\]]*)\]', title_location_and_dates_text)[0] #regex finds bracketed text, but the parentheses in the regex makes it NOT return the brackets
         dates = re.findall('\[([^\]]*)\]', title_location_and_dates_text)[1]
         start_date = dates[0:11]
         end_date = dates[14:len(dates)]
-        is_online_or_hybrid = bool(re.search('(online|virtual|zoom|hybrid|MS Teams)', str(location), flags=re.IGNORECASE))
+        is_online_or_hybrid = bool(re.search('(online|virtual|zoom|hybrid|ms teams)', str(location), flags=re.IGNORECASE))
     except Exception as e:
         location = None;
         start_date = None;
