@@ -83,23 +83,3 @@ for posting in listing:
 
     #write a row with the conference's details
     csv_writer.writerow([title, conf_website_url, location, is_online_or_hybrid, start_date, end_date, ling_fields, subject_langs, linguistlist_url])  
-
-# Initial notes -------------------------------
-    #Things to skip:
-    #DONE: the sessions indented. inside tr, then inside td use the align="left" valign="top attributes to find sessions
-    #DONE: sessions described in parentheses: --> can't do yet. so we'll keep and have blank dates/etc and take the first link in href.
-        # <tr>
-        # <td colspan="2" align="left"><a href="/callconf/browse-conf-action.cfm?ConfID=426236">Accountability of Discursive Action and the Private-Public Interface
-        # </a>
-        # (Session of <a href="/callconf/browse-conf-action.cfm?ConfID=419116">17th International Pragmatics Conference</a>)
-        # <br /></td>
-        # </tr>
-    #DONE: the month-year headers on the page
-    #DONE: calls for papers
-        # <tr>
-        # <td colspan="2"><a href="../callconf/browse-conf-action.cfm?ConfID=443036">2nd International Linguistics Colloquium in Bolivia
-        # <span>(ILCB)</span>
-        # <span class="important">- Call for papers</span>
-        # </a>
-        # &nbsp;[Online] [17-Jul-2021 - 18-Jul-2021]<br /></td>
-        # </tr>
